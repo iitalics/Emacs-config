@@ -19,6 +19,9 @@
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
 
+(defmacro λ (args &rest body)
+  `(lambda args ,@body))
+
 
 ;;;; Paths ;;;;
 
@@ -84,6 +87,7 @@
 (use-package dr-racket-like-unicode
   :bind (("C-c C-\\" . dr-racket-like-unicode-char)))
 
+
 ;;;; PACKAGES: Languages ;;;;
 
 (use-package racket-mode)
@@ -111,7 +115,7 @@
 (use-package flycheck
   :config
   (add-hook 'c++-mode-hook
-            (lambda ()
+            (λ ()
               (setq-local flycheck-clang-language-standard "c++1z")
               (setq-local company-clang-arguments '("-std=c++1z"))))
   (dolist (hook '(c-mode-hook))
@@ -144,7 +148,7 @@
 ;;;; Misc. keys ;;;;
 
 (global-unset-key (kbd "C-x C-b"))
-
+(global-set-key (kbd "C-c <C-return>") 'compile)
 
 ;;;; Misc. variables ;;;;
 
@@ -156,6 +160,6 @@
 
 (setq del-trailing t)
 (add-hook 'before-save-hook
-	  (lambda ()
+	  (λ ()
 	    (when del-trailing
 	      (delete-trailing-whitespace))))
