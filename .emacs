@@ -53,6 +53,12 @@
 (use-package shell
   :bind (("M-s M-s" . shell)))
 
+(use-package undo-tree
+  :straight (:type git
+             :host github
+             :repo "emacsmirror/undo-tree"
+             :files ("undo-tree.el")))
+
 (use-package evil)
 (evil-mode 1)
 
@@ -66,6 +72,7 @@
          ("RET" . ivy-alt-done))
   :config
   (setq ivy-re-builders-alist '((t . ivy--regex-fuzzy))))
+(ivy-mode 1)
 
 (use-package magit
   :bind (("M-g M-s" . magit-status)))
@@ -88,7 +95,6 @@
 ;;;; PACKAGES: Autocomplete ;;;;
 
 (use-package company
-  :after (merlin)
   :bind (:map company-mode-map ("<C-tab>" . company-complete))
   :config
   (add-to-list 'company-backends 'company-c-headers)
@@ -100,7 +106,9 @@
   (add-hook 'c++-mode-hook
             (lambda ()
               (setq-local flycheck-clang-language-standard "c++1z")
-              (setq-local company-clang-arguments '("-std=c++1z")))))
+              (setq-local company-clang-arguments '("-std=c++1z"))))
+  (dolist (hook '(c-mode-hook))
+    (add-hook hook 'flycheck-mode)))
 
 (use-package merlin
   :after (tuareg)
