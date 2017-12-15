@@ -44,10 +44,11 @@
              :repo "emacsmirror/font-lock-plus"
              :files ("font-lock+.el")))
 
-(use-package doom-themes
-  :config
-  (load-theme 'doom-molokai t))
-
+(use-package ample-theme)
+(enable-theme 'ample)
+(custom-theme-set-faces
+ 'ample
+ '(minibuffer-prompt ((t (:foreground "#528fd1" :bold t :background nil)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
