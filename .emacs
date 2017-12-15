@@ -134,6 +134,11 @@
 ;(setq-default rust-indent-offset 4)
 
 
+;;;; Misc. keys ;;;;
+
+(global-unset-key (kbd "C-x C-b"))
+
+
 ;;;; Misc. variables ;;;;
 
 (setq inhibit-startup-screen t)
