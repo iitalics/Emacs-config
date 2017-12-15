@@ -20,7 +20,7 @@
 (setq straight-use-package-by-default t)
 
 (defmacro λ (args &rest body)
-  `(lambda args ,@body))
+  `(lambda ,args ,@body))
 
 
 ;;;; Paths ;;;;
@@ -55,6 +55,7 @@
 ;;;; PACKAGES: General ;;;;
 
 (use-package diminish)
+(use-package flx)
 
 (use-package undo-tree
   :straight (:type git
@@ -64,10 +65,9 @@
   :config
   (diminish 'undo-tree-mode))
 
-(use-package evil
-  :init (evil-mode 1))
+(use-package evil)
+(evil-mode 1)
 
-(use-package flx)
 (use-package ivy
   :bind (("C-s" . swiper)
          ("C-x C-f" . counsel-find-file)
@@ -75,7 +75,9 @@
          ("TAB" . ivy-partial)
          ("RET" . ivy-alt-done))
   :config
-  (setq ivy-re-builders-alist '((t . ivy--regex-fuzzy)))
+  (setq ivy-re-builders-alist
+        '((swiper . regexp-quote)
+          (t . ivy--regex-fuzzy)))
   (diminish 'ivy-mode))
 (ivy-mode 1)
 
@@ -154,11 +156,6 @@
 ;(setq-default js-indent-level 2)
 ;(setq-default rust-indent-offset 4)
 
-
-;;;; Misc. keys ;;;;
-
-(global-unset-key (kbd "C-x C-b"))
-(global-set-key (kbd "C-c <C-return>") 'compile)
 
 ;;;; Misc. variables ;;;;
 
