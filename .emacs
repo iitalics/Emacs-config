@@ -92,6 +92,8 @@
 ;;;; PACKAGES: Languages ;;;;
 
 (use-package racket-mode)
+(use-package python-mode)
+(use-package idris-mode)
 
 (use-package tuareg
   :bind (:map tuareg-mode-map ("C-c C-c" . tuareg-eval-buffer)))
@@ -99,6 +101,13 @@
 (use-package haskell-mode
   :bind (:map haskell-mode-map ("C-c C-l" . haskell-process-load-file))
   :config
+  (setq haskell-font-lock-symbols t)
+  (setq haskell-font-lock-symbols-alist
+        '(("\\" . "λ") ("::" . "∷") ("forall" . "∀")
+          ("not" . "¬") ("." "○" haskell-font-lock-dot-is-not-composition)
+          ("->" . "→") ("<-" . "←") ("=>" . "⇒")
+          ("==" . "≡") ("/=" . "≢") (">=" . "≥") ("<=" . "≤")
+          ("!!" . "‼") ("&&" . "∧") ("||" . "∨")))
   (setq haskell-process-type 'stack-ghci)
   (setq haskell-process-path-ghci "stack"))
 
