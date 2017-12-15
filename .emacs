@@ -50,33 +50,39 @@
 
 ;;;; PACKAGES: General ;;;;
 
-(use-package shell
-  :bind (("M-s M-s" . shell)))
+(use-package diminish)
 
 (use-package undo-tree
   :straight (:type git
              :host github
              :repo "emacsmirror/undo-tree"
-             :files ("undo-tree.el")))
+             :files ("undo-tree.el"))
+  :config
+  (diminish 'undo-tree-mode))
 
-(use-package evil)
-(evil-mode 1)
+(use-package evil
+  :init (evil-mode 1))
 
 (use-package flx)
 (use-package ivy
-  :after (flx)
   :bind (("C-s" . swiper)
          ("C-x C-f" . counsel-find-file)
          :map ivy-minibuffer-map
          ("TAB" . ivy-partial)
          ("RET" . ivy-alt-done))
   :config
-  (setq ivy-re-builders-alist '((t . ivy--regex-fuzzy))))
+  (setq ivy-re-builders-alist '((t . ivy--regex-fuzzy)))
+  (diminish 'ivy-mode))
 (ivy-mode 1)
+
+(use-package shell
+  :bind (("M-s M-s" . shell)))
 
 (use-package magit
   :bind (("M-g M-s" . magit-status)))
 
+(use-package dr-racket-like-unicode
+  :bind (("C-c C-\\" . dr-racket-like-unicode-char)))
 
 ;;;; PACKAGES: Languages ;;;;
 
@@ -95,11 +101,12 @@
 ;;;; PACKAGES: Autocomplete ;;;;
 
 (use-package company
+  :init (global-company-mode 1)
   :bind (:map company-mode-map ("<C-tab>" . company-complete))
   :config
   (add-to-list 'company-backends 'company-c-headers)
   (add-to-list 'company-backends 'company-racer)
-  (global-company-mode 1))
+  (diminish 'company-mode))
 
 (use-package flycheck
   :config
