@@ -1,4 +1,3 @@
-;;;; Bootstrap straight ;;;;
 
 (require 'package)
 (add-to-list 'package-archives
@@ -18,15 +17,24 @@
 (package-initialize)
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
-
-(defmacro λ (args &rest body)
-  `(lambda ,args ,@body))
+;(setq use-package-verbose t)
 
 
 ;;;; Paths ;;;;
 
+(setq custom-file "~/.emacs.d/custom.el")
+(load custom-file)
 (add-to-list 'backup-directory-alist '("." . "~/.emacs.d/backup-saves/"))
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
+
+
+;;;; Elisp ;;;;
+
+(use-package cl-lib
+  :demand)
+
+(defmacro λ (args &rest body)
+  `(lambda ,args ,@body))
 
 
 ;;;; Font & Theme ;;;;
@@ -35,7 +43,7 @@
  '(default
     ((t (:family "Source Code Pro"
          :foundry "ADBO"
-         :slant normal :weight semi-bold :width normal
+         :weight semi-bold
          :height 90)))))
 
 (use-package font-lock+
@@ -50,16 +58,17 @@
  'ample
  '(minibuffer-prompt ((t (:foreground "#528fd1" :bold t :background nil)))))
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;; PACKAGES: General ;;;;
 
+(require 'quail)
 (use-package diminish)
 (use-package flx)
 
 (use-package undo-tree
-  :straight (:type git
-             :host github
+  :straight (:host github
              :repo "emacsmirror/undo-tree"
              :files ("undo-tree.el"))
   :config
@@ -88,30 +97,58 @@
   :bind (("M-g M-s" . magit-status)))
 
 (use-package dr-racket-like-unicode
-  :bind (("C-c C-\\" . dr-racket-like-unicode-char)))
+  :bind (("C-c C-\\" . dr-racket-like-unicode-char))
+  :config
+  (let ((custom-table
+         '(("\\composition" . "○")
+           ("\\varphi" . "\u03c6"))))
+    (setq dr-racket-like-unicode-table
+          (cl-union custom-table
+                    dr-racket-like-unicode-table))))
+
+(use-package which-key)
+(which-key-mode 1)
 
 
 ;;;; PACKAGES: Languages ;;;;
 
+(use-package yaml-mode)
+(use-package toml-mode)
 (use-package racket-mode)
-(use-package python-mode)
-(use-package idris-mode)
+(use-package rust-mode)
+(use-package markdown-mode)
 
 (use-package tuareg
   :bind (:map tuareg-mode-map ("C-c C-c" . tuareg-eval-buffer)))
 
+;; some bug is calling this (previously) nonexistant function to be called
+(defun tuareg-abbrev-hook ()
+  (interactive) ())
+
 (use-package haskell-mode
   :bind (:map haskell-mode-map ("C-c C-l" . haskell-process-load-file))
   :config
-  (setq haskell-font-lock-symbols t)
-  (setq haskell-font-lock-symbols-alist
+  (setq haskell-font-lock-symbols t
+        haskell-process-type 'stack-ghci
+        haskell-process-path-ghci "stack"
+        haskell-font-lock-symbols-alist
         '(("\\" . "λ") ("::" . "∷") ("forall" . "∀")
-          ("not" . "¬") ("." "○" haskell-font-lock-dot-is-not-composition)
+                                        ; ("not" . "¬")
+          ("." "○" haskell-font-lock-dot-is-not-composition)
           ("->" . "→") ("<-" . "←") ("=>" . "⇒")
           ("==" . "≡") ("/=" . "≢") (">=" . "≥") ("<=" . "≤")
-          ("!!" . "‼") ("&&" . "∧") ("||" . "∨")))
-  (setq haskell-process-type 'stack-ghci)
-  (setq haskell-process-path-ghci "stack"))
+          ("!!" . "‼") ("&&" . "∧") ("||" . "∨"))))
+
+(use-package idris-mode
+  :config (add-hook 'idris-mode-hook (λ () (setq-local tab-width 2))))
+
+(defvar tsu--agda-mode-dir
+  (file-name-directory
+   (shell-command-to-string "agda-mode locate")))
+
+(use-package agda2
+  :straight nil
+  :load-path tsu--agda-mode-dir)
 
 
 ;;;; PACKAGES: Autocomplete ;;;;
@@ -120,6 +157,8 @@
   :init (global-company-mode 1)
   :bind (:map company-mode-map ("<C-tab>" . company-complete))
   :config
+  (setq company-global-modes '(not racket-mode
+                                   racket-repl-mode))
   (add-to-list 'company-backends 'company-c-headers)
   (add-to-list 'company-backends 'company-racer)
   (diminish 'company-mode))
@@ -137,16 +176,29 @@
   :after (tuareg)
   :config (add-hook 'tuareg-mode-hook 'merlin-mode))
 
+(use-package racer
+  :config
+  (add-hook 'rust-mode-hook 'racer-mode)
+  (add-hook 'racer-mode-hook 'eldoc-mode))
+
+(use-package rustfmt
+  :preface
+  (defun tsu-rust-fmt-and-save ()
+    (interactive)
+    (rustfmt-format-buffer)
+    (save-buffer))
+  :bind (:map rust-mode-map ("C-x M-s" . tsu-rust-fmt-and-save)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;; Enable/disable modes ;;;;
+;;;; Disable dumb stuff ;;;;
 
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (tooltip-mode -1)
 (scroll-bar-mode -1)
-
+(setq visible-bell nil)
 
 ;;;; Tabs and whitespace ;;;;
 
@@ -159,14 +211,40 @@
 
 ;;;; Misc. variables ;;;;
 
+(defvar tsu-delete-trailing t)
 (setq inhibit-startup-screen t)
 (setq initial-major-mode 'racket-mode)
+(load "~/.emacs.d/initial-scratch-msg.el")
 
 
 ;;;; Misc. hooks ;;;;
 
-(setq del-trailing t)
 (add-hook 'before-save-hook
-	  (λ ()
-	    (when del-trailing
-	      (delete-trailing-whitespace))))
+          (λ ()
+             (when tsu-delete-trailing
+               (delete-trailing-whitespace))))
+
+
+;;;; Misc. keys ;;;;
+
+(global-unset-key (kbd "C-x C-b"))
+(global-set-key (kbd "C-x C-b") #'switch-to-buffer)
+(global-set-key (kbd "C-c <C-return>") 'compile)
+
+
+(defun tsu--dir-contains-opam-p (dir)
+  (let ((opam-found nil))
+    (dolist (f (directory-files dir))
+      (when (and (string-suffix-p ".opam" f)
+                 (not (string-equal f ".opam")))
+        (setq opam-found t)))
+    opam-found))
+
+(defun tsu--find-opam-dir (dir depth)
+  (cond
+   ((string-equal dir "/") nil)
+   ((<= depth 0) nil)
+   ((tsu--dir-contains-opam-p dir) dir)
+   (t (let* ((parent-dir (file-name-directory dir))
+             (parent-dir* (string-remove-suffix "/" parent-dir)))
+        (tsu--find-opam-dir parent-dir* (1- depth))))))
