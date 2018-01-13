@@ -1,4 +1,3 @@
-
 (require 'package)
 (add-to-list 'package-archives
 	     '("melpa" . "https://melpa.org/packages/") t)
@@ -66,6 +65,7 @@
 (require 'quail)
 (use-package diminish)
 (use-package flx)
+(use-package s)
 
 (use-package undo-tree
   :straight (:host github
@@ -94,14 +94,19 @@
   :bind (("M-s M-s" . shell)))
 
 (use-package magit
-  :bind (("M-g M-s" . magit-status)))
+  :bind (("M-g M-s" . magit-status))
+  :config
+  (setq magit-log-section-commit-count 4))
 
 (use-package dr-racket-like-unicode
   :bind (("C-c C-\\" . dr-racket-like-unicode-char))
   :config
   (let ((custom-table
          '(("\\composition" . "○")
-           ("\\varphi" . "\u03c6"))))
+           ("\\varphi" . "\u03c6")
+           ("\\ell" . "\u2113")
+           ("\\ok" . "\u2713")
+           ("\\notok" . "\u2717"))))
     (setq dr-racket-like-unicode-table
           (cl-union custom-table
                     dr-racket-like-unicode-table))))
@@ -114,14 +119,19 @@
 
 (use-package yaml-mode)
 (use-package toml-mode)
-(use-package racket-mode)
 (use-package rust-mode)
 (use-package markdown-mode)
+
+(use-package racket-mode
+  :straight nil
+  :load-path "/home/milo/Git/racket-mode/"
+  :config
+  (put 'reduction-relation 'racket-indent-function 1)
+  (put 'test--> 'racket-indent-function 1))
 
 (use-package tuareg
   :bind (:map tuareg-mode-map ("C-c C-c" . tuareg-eval-buffer)))
 
-;; some bug is calling this (previously) nonexistant function to be called
 (defun tuareg-abbrev-hook ()
   (interactive) ())
 
@@ -150,8 +160,18 @@
   :straight nil
   :load-path tsu--agda-mode-dir)
 
+(use-package meghanada
+  :config (add-hook 'java-mode-hook
+                    (λ ()
+                       (meghanada-mode t))))
+
+(use-package tex-mode
+  :bind (:map latex-mode-map ("C-c C-]" . #'latex-close-block)))
+
 
 ;;;; PACKAGES: Autocomplete ;;;;
+
+(use-package company-c-headers)
 
 (use-package company
   :init (global-company-mode 1)
@@ -160,7 +180,6 @@
   (setq company-global-modes '(not racket-mode
                                    racket-repl-mode))
   (add-to-list 'company-backends 'company-c-headers)
-  (add-to-list 'company-backends 'company-racer)
   (diminish 'company-mode))
 
 (use-package flycheck
@@ -179,7 +198,9 @@
 (use-package racer
   :config
   (add-hook 'rust-mode-hook 'racer-mode)
-  (add-hook 'racer-mode-hook 'eldoc-mode))
+  (add-hook 'racer-mode-hook 'eldoc-mode)
+                                        ;(add-to-list 'company-backends 'company-racer)
+  )
 
 (use-package rustfmt
   :preface
