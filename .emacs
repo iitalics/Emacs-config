@@ -18,7 +18,6 @@
 (setq straight-use-package-by-default t)
 ;(setq use-package-verbose t)
 
-
 ;;;; Paths ;;;;
 
 (setq custom-file "~/.emacs.d/custom.el")
@@ -38,12 +37,22 @@
 
 ;;;; Font & Theme ;;;;
 
+;; (custom-set-faces
+;;  '(default
+;;     ((t (:family "Source Code Pro"
+;;          :foundry "ADBO"
+;;          :weight semi-bold
+;;          :height 90)))))
+
 (custom-set-faces
  '(default
-    ((t (:family "Source Code Pro"
-         :foundry "ADBO"
-         :weight semi-bold
-         :height 90)))))
+    ((t (:inherit nil
+         :stipple nil
+         ;:inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal
+         :weight normal :width normal
+         :height 105
+         :foundry "CYEL"
+         :family "Iosevka")))))
 
 (use-package font-lock+
   :straight (:type git
@@ -51,11 +60,16 @@
              :repo "emacsmirror/font-lock-plus"
              :files ("font-lock+.el")))
 
-(use-package ample-theme)
-(enable-theme 'ample)
-(custom-theme-set-faces
- 'ample
- '(minibuffer-prompt ((t (:foreground "#528fd1" :bold t :background nil)))))
+;(use-package color-theme-modern)
+
+;; (use-package ample-theme)
+;; (enable-theme 'ample)
+;; (custom-theme-set-faces 'ample
+;;  '(minibuffer-prompt ((t (:foreground "#528fd1" :bold t :background nil)))))
+
+(load-theme 'mccarthy t)
+
+(use-package rainbow-delimiters)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -121,16 +135,34 @@
 (use-package toml-mode)
 (use-package rust-mode)
 (use-package markdown-mode)
+(use-package sass-mode)
+(use-package julia-mode)
+(use-package forth-mode)
+(use-package inf-ruby)
 
 (use-package racket-mode
   :straight nil
   :load-path "/home/milo/Git/racket-mode/"
   :config
-  (put 'reduction-relation 'racket-indent-function 1)
-  (put 'test--> 'racket-indent-function 1))
+  (dolist (x '((reduction-relation 1)
+               (test--> 1)
+               (build-list 1)
+               (syntax-property 1)
+               (raise-syntax-error 1)
+               (big-bang 1)
+               (nanopass-case 2)
+               (val 4)))
+    (put (car x) #'racket-indent-function (cadr x))))
+
+(defvar tsu--qtest-dir
+  "/home/milo/Projects/ocaml/qtest/")
 
 (use-package tuareg
-  :bind (:map tuareg-mode-map ("C-c C-c" . tuareg-eval-buffer)))
+  :bind (:map tuareg-mode-map ("C-c C-c" . tuareg-eval-buffer))
+  :config
+  (load-file
+   (concat tsu--qtest-dir "editor_support/emacs/batteries_dev.el"))
+  (setq tuareg-prettify-symbols-full t))
 
 (defun tuareg-abbrev-hook ()
   (interactive) ())
@@ -144,7 +176,7 @@
         haskell-font-lock-symbols-alist
         '(("\\" . "λ") ("::" . "∷") ("forall" . "∀")
                                         ; ("not" . "¬")
-          ("." "○" haskell-font-lock-dot-is-not-composition)
+          ;("." "○" haskell-font-lock-dot-is-not-composition)
           ("->" . "→") ("<-" . "←") ("=>" . "⇒")
           ("==" . "≡") ("/=" . "≢") (">=" . "≥") ("<=" . "≤")
           ("!!" . "‼") ("&&" . "∧") ("||" . "∨"))))
@@ -158,7 +190,18 @@
 
 (use-package agda2
   :straight nil
-  :load-path tsu--agda-mode-dir)
+  :load-path tsu--agda-mode-dir
+  :config
+  ;; (add-hook 'agda2-mode-hook
+  ;;           (λ ()
+  ;;              (dolist (face '(agda2-highlight-primitive-type-face
+  ;;                              agda2-highlight-datatype-face
+  ;;                              agda2-highlight-function-face
+  ;;                              agda2-highlight-postulate-face
+  ;;                              agda2-highlight-primitive-face
+  ;;                              agda2-highlight-record-face))
+  ;;                (set-face-foreground face "deep sky blue"))))
+  )
 
 (use-package meghanada
   :config (add-hook 'java-mode-hook
@@ -178,21 +221,26 @@
   :bind (:map company-mode-map ("<C-tab>" . company-complete))
   :config
   (setq company-global-modes '(not racket-mode
-                                   racket-repl-mode))
+                                   racket-repl-mode
+                                   c++-mode))
   (add-to-list 'company-backends 'company-c-headers)
   (diminish 'company-mode))
 
 (use-package flycheck
   :config
+  (setq-default flycheck-clang-args '("-Wno-pragma-once-outside-header"))
   (add-hook 'c++-mode-hook
             (λ ()
-              (setq-local flycheck-clang-language-standard "c++1z")
-              (setq-local company-clang-arguments '("-std=c++1z"))))
-  (dolist (hook '(c-mode-hook))
+               (setq-local flycheck-clang-language-standard "c++1z")
+               (setq-local company-clang-arguments '("-std=c++1z" "-Wno-pragma-once-outside-header"))))
+  (dolist (hook '(c-mode-hook
+                  c++-mode-hook))
     (add-hook hook 'flycheck-mode)))
 
 (use-package merlin
   :after (tuareg)
+  ;:bind (:map merlin-mode-map
+  ;       ("C-c C-," . merlin-type-enclosing))
   :config (add-hook 'tuareg-mode-hook 'merlin-mode))
 
 (use-package racer
@@ -210,6 +258,26 @@
     (save-buffer))
   :bind (:map rust-mode-map ("C-x M-s" . tsu-rust-fmt-and-save)))
 
+(use-package impatient-mode)
+
+;;;; C++ ;;;;
+
+(use-package clang-format)
+
+(use-package editorconfig
+  :ensure t
+  :config
+  (editorconfig-mode 1)
+  (diminish 'editorconfig-mode))
+
+(add-hook 'c++-mode-hook
+          (λ ()
+             (c-set-offset 'innamespace 0)
+             (setq-local c-basic-offset 2)))
+
+(add-hook 'c-mode-hook
+          (λ ()
+             (setq-local c-basic-offset 2)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -233,6 +301,7 @@
 ;;;; Misc. variables ;;;;
 
 (defvar tsu-delete-trailing t)
+(setq fill-column 100)
 (setq inhibit-startup-screen t)
 (setq initial-major-mode 'racket-mode)
 (load "~/.emacs.d/initial-scratch-msg.el")
@@ -269,3 +338,11 @@
    (t (let* ((parent-dir (file-name-directory dir))
              (parent-dir* (string-remove-suffix "/" parent-dir)))
         (tsu--find-opam-dir parent-dir* (1- depth))))))
+
+
+;;;; Memes ;;;;
+
+(use-package tetris
+  :bind (:map tetris-mode-map
+         ("<up>" . tetris-move-bottom)
+         ("z" . tetris-rotate-next)))
